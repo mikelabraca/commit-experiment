@@ -1,0 +1,32 @@
+# .github/workflows/pr-title-check.yml
+name: PR Title Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          echo "Checking PR Title: $PR_TITLE"
+          echo "Branch Name: $HEAD_REF"
+
+          # Allow specific branches to skip the check
+          if [[ "$HEAD_REF" =~ ^(dependabot|dependencies|maintenance)/ ]]; then
+            echo "Branch is allowed to skip PR title validation."
+            exit 0
+          fi
+
+          # Validate the PR title format
+          if [[ ! "$PR_TITLE" =~ ^\[[A-Z]+-[0-9]+\]\ .+ ]]; then
+            echo "::error ::PR title must start with [JIRA-ID] followed by a space and some text."
+            exit 1
+          fi
+
+          echo "PR title is valid."
